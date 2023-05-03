@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ding-live/sdk-go/internal/api"
-	"github.com/ding-live/sdk-go/pkg/status"
+	"github.com/ding-live/go-sdk/internal/api"
+	"github.com/ding-live/go-sdk/pkg/status"
 	"github.com/google/uuid"
 	"github.com/nyaruka/phonenumbers"
 )

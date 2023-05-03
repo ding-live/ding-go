@@ -1,4 +1,4 @@
-module github.com/ding-live/sdk-go
+module github.com/ding-live/go-sdk
 
 go 1.20
 

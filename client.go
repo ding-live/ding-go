@@ -101,14 +101,19 @@ func (c *Client) AuthenticateWithContext(ctx context.Context, opt AuthenticateOp
 		return nil, ErrInvalidPhoneNumber
 	}
 
-	res, err := c.api.Authentication(ctx, api.AuthRequest{
+	req := api.AuthRequest{
 		PhoneNumber:  opt.PhoneNumber,
 		CustomerUUID: c.customerUUID,
 		IP:           opt.IP,
 		DeviceID:     opt.DeviceID,
-		DeviceType:   String(opt.DeviceType.String()),
 		AppVersion:   opt.AppVersion,
-	})
+	}
+
+	if opt.DeviceType != nil {
+		req.DeviceType = String(opt.DeviceType.String())
+	}
+
+	res, err := c.api.Authentication(ctx, req)
 	if err != nil {
 		return nil, apiErrToErr(err)
 	}

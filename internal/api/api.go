@@ -71,11 +71,6 @@ const (
 	ErrorCodeInvalidAuthUUID    ErrorCode = "invalid_auth_uuid"
 )
 
-type APIResponse[T any] struct {
-	Success T
-	Error   *ErrorResponse
-}
-
 type AuthRequest struct {
 	PhoneNumber  string  `json:"phone_number,omitempty"`
 	CustomerUUID string  `json:"customer_uuid,omitempty"`
@@ -120,22 +115,14 @@ var (
 
 // ----------------------------------------------------------------------------
 
-func (a *API) Authentication(ctx context.Context, req AuthRequest) (*APIResponse[AuthSuccessResponse], error) {
-	return sendRequest[AuthSuccessResponse](ctx, a, "authentication", req)
+// TODO(2024-25) -> abstract each endpoint parsing logic using generics
+type AuthenticationResponse struct {
+	Error   *ErrorResponse
+	Success *AuthSuccessResponse
 }
 
-func (a *API) Check(ctx context.Context, req CheckRequest) (*APIResponse[CheckSuccessResponse], error) {
-	return sendRequest[CheckSuccessResponse](ctx, a, "check", req)
-}
-
-func (a *API) Retry(ctx context.Context, req RetryRequest) (*APIResponse[RetrySuccessResponse], error) {
-	return sendRequest[RetrySuccessResponse](ctx, a, "retry", req)
-}
-
-// ----------------------------------------------------------------------------
-
-func sendRequest[T any](ctx context.Context, a *API, path string, req any) (*APIResponse[T], error) {
-	res, err := a.post(ctx, path, req)
+func (a *API) Authentication(ctx context.Context, req AuthRequest) (*AuthenticationResponse, error) {
+	res, err := a.post(ctx, "authentication", req)
 	if err != nil {
 		return nil, ErrInternal
 	}
@@ -150,22 +137,97 @@ func sendRequest[T any](ctx context.Context, a *API, path string, req any) (*API
 			return nil, ErrInternal
 		}
 
-		return &APIResponse[T]{
+		return &AuthenticationResponse{
 			Error: &resp,
 		}, nil
 	}
 
-	var resp T
+	var resp AuthSuccessResponse
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
 		return nil, ErrInternal
 	}
 
-	return &APIResponse[T]{
-		Success: resp,
+	return &AuthenticationResponse{
+		Success: &resp,
+	}, nil
+
+}
+
+type CheckResponse struct {
+	Error   *ErrorResponse
+	Success *CheckSuccessResponse
+}
+
+func (a *API) Check(ctx context.Context, req CheckRequest) (*CheckResponse, error) {
+	res, err := a.post(ctx, "check", req)
+	if err != nil {
+		return nil, ErrInternal
+	}
+
+	if res.StatusCode != http.StatusOK {
+		if res.StatusCode == http.StatusForbidden {
+			return nil, ErrUnauthorized
+		}
+
+		var resp ErrorResponse
+		if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+			return nil, ErrInternal
+		}
+
+		return &CheckResponse{
+			Error: &resp,
+		}, nil
+	}
+
+	var resp CheckSuccessResponse
+	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		return nil, ErrInternal
+	}
+
+	return &CheckResponse{
+		Success: &resp,
 	}, nil
 }
 
-func (a *API) post(ctx context.Context, url string, payload any) (*http.Response, error) {
+type RetryResponse struct {
+	Error   *ErrorResponse
+	Success *RetrySuccessResponse
+}
+
+func (a *API) Retry(ctx context.Context, req RetryRequest) (*RetryResponse, error) {
+	res, err := a.post(ctx, "check", req)
+	if err != nil {
+		return nil, ErrInternal
+	}
+
+	if res.StatusCode != http.StatusOK {
+		if res.StatusCode == http.StatusForbidden {
+			return nil, ErrUnauthorized
+		}
+
+		var resp ErrorResponse
+		if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+			return nil, ErrInternal
+		}
+
+		return &RetryResponse{
+			Error: &resp,
+		}, nil
+	}
+
+	var resp RetrySuccessResponse
+	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		return nil, ErrInternal
+	}
+
+	return &RetryResponse{
+		Success: &resp,
+	}, nil
+}
+
+// ----------------------------------------------------------------------------
+
+func (a *API) post(ctx context.Context, url string, payload interface{}) (*http.Response, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return nil, ErrInternal

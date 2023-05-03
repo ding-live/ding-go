@@ -51,8 +51,8 @@ func TestParseAuthSuccess(t *testing.T) {
 	res, err := a.Authentication(context.Background(), AuthRequest{})
 	require.NoError(t, err)
 
-	assert.Equal(t, &APIResponse[AuthSuccessResponse]{
-		Success: AuthSuccessResponse{
+	assert.Equal(t, &AuthenticationResponse{
+		Success: &AuthSuccessResponse{
 			AuthenticationUUID: testUUID.String(),
 			Status:             status.AuthPending,
 			CreatedAt:          testCreatedAt,
@@ -79,7 +79,7 @@ func TestParseError(t *testing.T) {
 	res, err := a.Authentication(context.Background(), AuthRequest{})
 	require.NoError(t, err)
 
-	assert.Equal(t, &APIResponse[AuthSuccessResponse]{
+	assert.Equal(t, &AuthenticationResponse{
 		Error: &ErrorResponse{
 			Code:    ErrorCodeInvalidPhoneNumber,
 			Message: "+invalid is not a valid phone number",
@@ -107,8 +107,8 @@ func TestParseCheckSuccess(t *testing.T) {
 	res, err := a.Check(context.Background(), CheckRequest{})
 	require.NoError(t, err)
 
-	assert.Equal(t, &APIResponse[CheckSuccessResponse]{
-		Success: CheckSuccessResponse{
+	assert.Equal(t, &CheckResponse{
+		Success: &CheckSuccessResponse{
 			AuthenticationUUID: testUUID.String(),
 			Status:             status.CheckValid,
 		},
@@ -139,8 +139,8 @@ func TestParseRetrySuccess(t *testing.T) {
 	res, err := a.Retry(context.Background(), RetryRequest{})
 	require.NoError(t, err)
 
-	assert.Equal(t, &APIResponse[RetrySuccessResponse]{
-		Success: RetrySuccessResponse{
+	assert.Equal(t, &RetryResponse{
+		Success: &RetrySuccessResponse{
 			AuthenticationUUID: id.String(),
 			Status:             status.RetryExpiredAuth,
 			CreatedAt:          createdAt,
@@ -188,8 +188,8 @@ func TestUnknownAuthStatus(t *testing.T) {
 	res, err := a.Authentication(context.Background(), AuthRequest{})
 	require.NoError(t, err)
 
-	assert.Equal(t, &APIResponse[AuthSuccessResponse]{
-		Success: AuthSuccessResponse{
+	assert.Equal(t, &AuthenticationResponse{
+		Success: &AuthSuccessResponse{
 			AuthenticationUUID: testUUID.String(),
 			Status:             status.AuthUnknown,
 			CreatedAt:          testCreatedAt,

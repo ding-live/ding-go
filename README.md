@@ -19,7 +19,7 @@ Then, reference go-sdk in a Go program with `import`:
 
 ```go
 import (
-	ding "github.com/ding-live/go-sdk"
+	ding "github.com/ding-live/ding-go"
 )
 ```
 
@@ -29,7 +29,7 @@ toolchain will resolve and fetch the go-sdk module automatically.
 Alternatively, you can also explicitly `go get` the package into a project:
 
 ```bash
-go get -u github.com/ding-live/go-sdk
+go get -u github.com/ding-live/ding-go
 ```
 
 ## Documentation

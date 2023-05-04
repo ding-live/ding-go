@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	ding "github.com/ding-live/go-sdk"
+	ding "github.com/ding-live/ding-go"
 )
 
 func main() {

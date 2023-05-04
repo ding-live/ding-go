@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ding-live/go-sdk/pkg/status"
+	"github.com/ding-live/ding-go/pkg/status"
 	"github.com/hashicorp/go-retryablehttp"
 )
 

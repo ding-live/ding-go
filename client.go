@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ding-live/go-sdk/internal/api"
-	"github.com/ding-live/go-sdk/pkg/status"
+	"github.com/ding-live/ding-go/internal/api"
+	"github.com/ding-live/ding-go/pkg/status"
 	"github.com/google/uuid"
 	"github.com/nyaruka/phonenumbers"
 )
@@ -94,7 +94,7 @@ type Authentication struct {
 }
 
 // AuthenticateWithContext performs an authentication request against the Ding API that
-// can be cancelled with a context. Authentication requests allow you to send an SMS to
+// can be cancelled with a context. Authentication requests allow you to send a message to
 // a given phone number with a code that the user will have to enter in your app.
 func (c *Client) AuthenticateWithContext(ctx context.Context, opt AuthenticateOptions) (*Authentication, error) {
 	if !isValidNumber(opt.PhoneNumber) {
@@ -131,7 +131,7 @@ func (c *Client) AuthenticateWithContext(ctx context.Context, opt AuthenticateOp
 }
 
 // Authenticate performs an authentication request against the Ding API. Authentication
-// requests allow you to send an SMS to a given phone number with a code that the user
+// requests allow you to send a message to a given phone number with a code that the user
 // will have to enter in your app.
 func (c *Client) Authenticate(opt AuthenticateOptions) (*Authentication, error) {
 	return c.AuthenticateWithContext(context.Background(), opt)

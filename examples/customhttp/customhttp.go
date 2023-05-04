@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	ding "github.com/ding-live/go-sdk"
+	ding "github.com/ding-live/ding-go"
 )
 
 func main() {

@@ -15,7 +15,7 @@ root if it already is):
 go mod init
 ```
 
-Then, reference go-sdk in a Go program with `import`:
+Then, reference ding-go in a Go program with `import`:
 
 ```go
 import (
@@ -24,7 +24,7 @@ import (
 ```
 
 Run any of the normal `go` commands (`build`/`install`/`test`). The Go
-toolchain will resolve and fetch the go-sdk module automatically.
+toolchain will resolve and fetch the ding-go module automatically.
 
 Alternatively, you can also explicitly `go get` the package into a project:
 

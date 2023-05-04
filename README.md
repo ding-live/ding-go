@@ -71,8 +71,6 @@ a, err := client.Check("f0b399ce-eead-4781-bab5-f63240e81a52", "3588")
 
 ### Retry an authentication
 
-When the user enters the code into your app, check whether it is valid
-
 ```go
 a, err := client.Retry("5071dbf5-78d0-497a-b844-c1231808c3e9")
 ```

@@ -69,7 +69,7 @@ When the user enters the code into your app, check whether it is valid
 a, err := client.Check("f0b399ce-eead-4781-bab5-f63240e81a52", "3588")
 ```
 
-### Retry and authentication
+### Retry an authentication
 
 When the user enters the code into your app, check whether it is valid
 

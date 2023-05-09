@@ -126,6 +126,7 @@ func (a *API) Authentication(ctx context.Context, req AuthRequest) (*Authenticat
 	if err != nil {
 		return nil, ErrInternal
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusForbidden {
@@ -163,6 +164,7 @@ func (a *API) Check(ctx context.Context, req CheckRequest) (*CheckResponse, erro
 	if err != nil {
 		return nil, ErrInternal
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusForbidden {
@@ -199,6 +201,7 @@ func (a *API) Retry(ctx context.Context, req RetryRequest) (*RetryResponse, erro
 	if err != nil {
 		return nil, ErrInternal
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusForbidden {

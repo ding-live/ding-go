@@ -197,7 +197,7 @@ type RetryResponse struct {
 }
 
 func (a *API) Retry(ctx context.Context, req RetryRequest) (*RetryResponse, error) {
-	res, err := a.post(ctx, "check", req)
+	res, err := a.post(ctx, "retry", req)
 	if err != nil {
 		return nil, ErrInternal
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/ding-live/ding-go/internal/api"
@@ -40,6 +41,7 @@ var (
 	ErrNegativeBalance     = errors.New("negative balance")
 	ErrUnsupportedRegion   = errors.New("unsupported region")
 	ErrInvalidAuthUUID     = errors.New("invalid authentication UUID")
+	ErrInvalidCallbackURL  = errors.New("invalid callback URL")
 )
 
 const apiBaseURL = "https://api.ding.live/v1"
@@ -100,6 +102,12 @@ type Authentication struct {
 func (c *Client) AuthenticateWithContext(ctx context.Context, opt AuthenticateOptions) (*Authentication, error) {
 	if !isValidNumber(opt.PhoneNumber) {
 		return nil, ErrInvalidPhoneNumber
+	}
+
+	if opt.CallbackURL != nil {
+		if !isValidURL(*opt.CallbackURL) {
+			return nil, ErrInvalidCallbackURL
+		}
 	}
 
 	req := api.AuthRequest{
@@ -266,6 +274,14 @@ func isValidNumber(phoneNumber string) bool {
 
 func isValidUUID(customerUUID string) bool {
 	if _, err := uuid.Parse(customerUUID); err != nil {
+		return false
+	}
+
+	return true
+}
+
+func isValidURL(u string) bool {
+	if _, err := url.ParseRequestURI(u); err != nil {
 		return false
 	}
 

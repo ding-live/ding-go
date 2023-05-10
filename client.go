@@ -83,6 +83,7 @@ type AuthenticateOptions struct {
 	DeviceID    *string
 	DeviceType  *DeviceType
 	AppVersion  *string
+	CallbackURL *string
 }
 
 // Authentication is the result of an authentication request.
@@ -107,6 +108,7 @@ func (c *Client) AuthenticateWithContext(ctx context.Context, opt AuthenticateOp
 		IP:           opt.IP,
 		DeviceID:     opt.DeviceID,
 		AppVersion:   opt.AppVersion,
+		CallbackURL:  opt.CallbackURL,
 	}
 
 	if opt.DeviceType != nil {

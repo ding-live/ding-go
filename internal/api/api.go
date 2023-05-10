@@ -78,6 +78,7 @@ type AuthRequest struct {
 	DeviceID     *string `json:"device_id,omitempty"`
 	DeviceType   *string `json:"device_type,omitempty"`
 	AppVersion   *string `json:"app_version,omitempty"`
+	CallbackURL  *string `json:"callback_url,omitempty"`
 }
 
 type CheckRequest struct {

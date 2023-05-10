@@ -22,6 +22,7 @@ func main() {
 		IP:          ding.String("192.168.0.1"),
 		DeviceType:  &ding.DeviceTypeIOS,
 		AppVersion:  ding.String("1.2.0"),
+		CallbackURL: ding.String("https://example.com/callback"),
 	})
 	if err != nil {
 		panic(err)

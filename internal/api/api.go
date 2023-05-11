@@ -138,19 +138,20 @@ type AuthenticationResponse struct {
 func (a *API) Authentication(ctx context.Context, req AuthRequest) (*AuthenticationResponse, error) {
 	res, err := a.post(ctx, "authentication", req)
 	if err != nil {
-
 		return nil, ErrInternal
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
+		a.leveledLogger.Errorf("received a non-200 HTTP status %d", res.StatusCode)
+
 		if res.StatusCode == http.StatusForbidden {
 			return nil, ErrUnauthorized
 		}
 
 		var resp ErrorResponse
 		if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
-			a.leveledLogger.Errorf("decode response for non-200 HTTP status: %s", err)
+			a.leveledLogger.Errorf("unable to decode response: %s", err)
 			return nil, ErrInternal
 		}
 
@@ -161,7 +162,7 @@ func (a *API) Authentication(ctx context.Context, req AuthRequest) (*Authenticat
 
 	var resp AuthSuccessResponse
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
-		a.leveledLogger.Errorf("decode response for HTTP 200 status: %s", err)
+		a.leveledLogger.Errorf("unable to decode response of HTTP OK status: %s", err)
 		return nil, ErrInternal
 	}
 
@@ -184,13 +185,15 @@ func (a *API) Check(ctx context.Context, req CheckRequest) (*CheckResponse, erro
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
+		a.leveledLogger.Errorf("received a non-200 HTTP status %d", res.StatusCode)
+
 		if res.StatusCode == http.StatusForbidden {
 			return nil, ErrUnauthorized
 		}
 
 		var resp ErrorResponse
 		if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
-			a.leveledLogger.Errorf("decode response for non-200 HTTP status: %s", err)
+			a.leveledLogger.Errorf("unable to decode response: %s", err)
 			return nil, ErrInternal
 		}
 
@@ -201,7 +204,7 @@ func (a *API) Check(ctx context.Context, req CheckRequest) (*CheckResponse, erro
 
 	var resp CheckSuccessResponse
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
-		a.leveledLogger.Errorf("decode response for HTTP 200 status: %s", err)
+		a.leveledLogger.Errorf("unable to decode response of HTTP OK status: %s", err)
 		return nil, ErrInternal
 	}
 
@@ -223,13 +226,15 @@ func (a *API) Retry(ctx context.Context, req RetryRequest) (*RetryResponse, erro
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
+		a.leveledLogger.Errorf("received a non-200 HTTP status %d", res.StatusCode)
+
 		if res.StatusCode == http.StatusForbidden {
 			return nil, ErrUnauthorized
 		}
 
 		var resp ErrorResponse
 		if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
-			a.leveledLogger.Errorf("decode response for non-200 HTTP status: %s", err)
+			a.leveledLogger.Errorf("unable to decode response: %s", err)
 			return nil, ErrInternal
 		}
 
@@ -240,7 +245,7 @@ func (a *API) Retry(ctx context.Context, req RetryRequest) (*RetryResponse, erro
 
 	var resp RetrySuccessResponse
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
-		a.leveledLogger.Errorf("decode response for HTTP 200 status: %s", err)
+		a.leveledLogger.Errorf("unable to decode response of HTTP OK status: %s", err)
 		return nil, ErrInternal
 	}
 

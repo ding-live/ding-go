@@ -88,3 +88,34 @@ c, err := ding.NewClient(ding.Config{
 	CustomHTTPClient:  &http.Client{Timeout: 10 * time.Second},
 })
 ```
+
+### Configure logging
+
+By default, the library logs error messages only (which are sent to stderr). Configure default logging using the LeveledLogger field:
+
+```go
+config := &ding.Config{
+    LeveledLogger: &ding.Logger{
+        Level: ding.LevelInfo,
+    },
+}
+```
+
+It's possible to use non-Ding leveled loggers as well. Ding expects loggers to comply to the following interface:
+
+```go
+type LeveledLogger interface {
+	Debugf(format string, v ...interface{})
+	Errorf(format string, v ...interface{})
+	Infof(format string, v ...interface{})
+	Warnf(format string, v ...interface{})
+}
+```
+
+Some loggers like [Logrus][logrus] and Zap's [SugaredLogger][zapsugaredlogger]
+support this interface out-of-the-box so it's possible to set
+`DefaultLeveledLogger` to a `*logrus.Logger` or `*zap.SugaredLogger` directly.
+For others it may be necessary to write a thin shim layer to support them.
+
+[logrus]: https://github.com/sirupsen/logrus/
+[zapsugaredlogger]: https://godoc.org/go.uber.org/zap#SugaredLogger

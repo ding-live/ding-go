@@ -27,7 +27,7 @@ type Config struct {
 	LeveledLogger     LeveledLogger
 }
 
-func New(cfg Config) *API {
+func New(cfg Config) (*API, error) {
 	client := retryablehttp.NewClient()
 
 	if cfg.MaxNetworkRetries != nil {
@@ -42,12 +42,18 @@ func New(cfg Config) *API {
 		client.Logger = convertLogger(cfg.LeveledLogger)
 	}
 
-	return &API{
+	a := &API{
 		baseURL:       cfg.BaseURL,
 		apiKey:        cfg.APIKey,
 		hc:            client.StandardClient(),
 		leveledLogger: cfg.LeveledLogger,
 	}
+
+	if a.leveledLogger == nil {
+		return nil, fmt.Errorf("missing logger")
+	}
+
+	return a, nil
 }
 
 const APIKeyHeader = "x-api-key"

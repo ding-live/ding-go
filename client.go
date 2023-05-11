@@ -3,6 +3,7 @@ package ding
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -85,15 +86,20 @@ func NewClient(cfg Config) (*Client, error) {
 		logger = &DefaultLeveledLogger
 	}
 
+	api, err := api.New(api.Config{
+		BaseURL:           apiBaseURL,
+		APIKey:            cfg.APIKey,
+		MaxNetworkRetries: cfg.MaxNetworkRetries,
+		CustomHTTPClient:  cfg.CustomHTTPClient,
+		LeveledLogger:     logger,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create API client: %w", err)
+	}
+
 	return &Client{
 		customerUUID: cfg.CustomerUUID,
-		api: *api.New(api.Config{
-			BaseURL:           apiBaseURL,
-			APIKey:            cfg.APIKey,
-			MaxNetworkRetries: cfg.MaxNetworkRetries,
-			CustomHTTPClient:  cfg.CustomHTTPClient,
-			LeveledLogger:     logger,
-		}),
+		api:          *api,
 	}, nil
 }
 

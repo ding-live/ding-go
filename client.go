@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ding-live/ding-go/internal/api"
+	"github.com/ding-live/ding-go/pkg/logging"
 	"github.com/ding-live/ding-go/pkg/status"
 	"github.com/google/uuid"
 	"github.com/nyaruka/phonenumbers"
@@ -24,13 +25,40 @@ type Client struct {
 type Config struct {
 	// CustomerUUID is the UUID that was given to you during your onboarding
 	CustomerUUID string
+
 	// APIKey is your secret API key
 	APIKey string
-	// MaxNetworkRetries is the maximum number of retries for network errors, defaults to 3
-	// Retry attempts are performed with exponential backoff
+
+	// MaxNetworkRetries sets maximum number of times that the library will
+	// retry requests that appear to have failed due to an intermittent
+	// problem.
+	//
+	// This value is a pointer to allow us to differentiate an unset versus
+	// empty value. Use ding.Int for an easy way to set this value.
+	//
+	// Defaults to 3.
 	MaxNetworkRetries *int
-	// CustomHTTPClient allows you to provide your own HTTP client to configure timeouts, etc.
+
+	// CustomHTTPClient is an HTTP client instance to use when making API requests.
+	//
+	// If left unset, it'll be set to a default HTTP client for the package.
 	CustomHTTPClient *http.Client
+
+	// LeveledLogger is the logger that the backend will use to log errors,
+	// warnings, and informational messages.
+	//
+	// LeveledLoggerInterface is implemented by LeveledLogger, and one can be
+	// initialized at the desired level of logging.  LeveledLoggerInterface
+	// also provides out-of-the-box compatibility with a Logrus Logger, but may
+	// require a thin shim for use with other logging libraries that use less
+	// standard conventions like Zap.
+	//
+	// Defaults to DefaultLeveledLogger.
+	//
+	// To set a logger that logs nothing, set this to a ding.LeveledLogger
+	// with a Level of LevelNull (simply setting this field to nil will not
+	// work).
+	LeveledLogger logging.LeveledLogger
 }
 
 var (
@@ -52,13 +80,20 @@ func NewClient(cfg Config) (*Client, error) {
 		return nil, ErrInvalidCustomerUUID
 	}
 
+	logger := cfg.LeveledLogger
+
+	if logger == nil {
+		logger = &logging.DefaultLeveledLogger
+	}
+
 	return &Client{
 		customerUUID: cfg.CustomerUUID,
 		api: *api.New(api.Config{
-			BaseURL:          apiBaseURL,
-			APIKey:           cfg.APIKey,
-			MaxNetworkRetry:  cfg.MaxNetworkRetries,
-			CustomHTTPClient: cfg.CustomHTTPClient,
+			BaseURL:           apiBaseURL,
+			APIKey:            cfg.APIKey,
+			MaxNetworkRetries: cfg.MaxNetworkRetries,
+			CustomHTTPClient:  cfg.CustomHTTPClient,
+			LeveledLogger:     logger,
 		}),
 	}, nil
 }

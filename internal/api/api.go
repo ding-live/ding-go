@@ -8,38 +8,46 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ding-live/ding-go/pkg/logging"
 	"github.com/ding-live/ding-go/pkg/status"
 	"github.com/hashicorp/go-retryablehttp"
 )
 
 type API struct {
-	baseURL string
-	apiKey  string
-	hc      *http.Client
+	baseURL       string
+	apiKey        string
+	hc            *http.Client
+	leveledLogger logging.LeveledLogger
 }
 
 type Config struct {
-	BaseURL          string
-	APIKey           string
-	MaxNetworkRetry  *int
-	CustomHTTPClient *http.Client
+	BaseURL           string
+	APIKey            string
+	MaxNetworkRetries *int
+	CustomHTTPClient  *http.Client
+	LeveledLogger     logging.LeveledLogger
 }
 
 func New(cfg Config) *API {
 	client := retryablehttp.NewClient()
 
-	if cfg.MaxNetworkRetry != nil {
-		client.RetryMax = *cfg.MaxNetworkRetry
+	if cfg.MaxNetworkRetries != nil {
+		client.RetryMax = *cfg.MaxNetworkRetries
 	}
 
 	if cfg.CustomHTTPClient != nil {
 		client.HTTPClient = cfg.CustomHTTPClient
 	}
 
+	if cfg.LeveledLogger != nil {
+		client.Logger = convertLogger(cfg.LeveledLogger)
+	}
+
 	return &API{
-		baseURL: cfg.BaseURL,
-		apiKey:  cfg.APIKey,
-		hc:      client.StandardClient(),
+		baseURL:       cfg.BaseURL,
+		apiKey:        cfg.APIKey,
+		hc:            client.StandardClient(),
+		leveledLogger: cfg.LeveledLogger,
 	}
 }
 
@@ -125,6 +133,7 @@ type AuthenticationResponse struct {
 func (a *API) Authentication(ctx context.Context, req AuthRequest) (*AuthenticationResponse, error) {
 	res, err := a.post(ctx, "authentication", req)
 	if err != nil {
+
 		return nil, ErrInternal
 	}
 	defer res.Body.Close()
@@ -136,6 +145,7 @@ func (a *API) Authentication(ctx context.Context, req AuthRequest) (*Authenticat
 
 		var resp ErrorResponse
 		if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+			a.leveledLogger.Errorf("decode response for non-200 HTTP status: %s", err)
 			return nil, ErrInternal
 		}
 
@@ -146,6 +156,7 @@ func (a *API) Authentication(ctx context.Context, req AuthRequest) (*Authenticat
 
 	var resp AuthSuccessResponse
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		a.leveledLogger.Errorf("decode response for HTTP 200 status: %s", err)
 		return nil, ErrInternal
 	}
 
@@ -174,6 +185,7 @@ func (a *API) Check(ctx context.Context, req CheckRequest) (*CheckResponse, erro
 
 		var resp ErrorResponse
 		if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+			a.leveledLogger.Errorf("decode response for non-200 HTTP status: %s", err)
 			return nil, ErrInternal
 		}
 
@@ -184,6 +196,7 @@ func (a *API) Check(ctx context.Context, req CheckRequest) (*CheckResponse, erro
 
 	var resp CheckSuccessResponse
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		a.leveledLogger.Errorf("decode response for HTTP 200 status: %s", err)
 		return nil, ErrInternal
 	}
 
@@ -211,6 +224,7 @@ func (a *API) Retry(ctx context.Context, req RetryRequest) (*RetryResponse, erro
 
 		var resp ErrorResponse
 		if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+			a.leveledLogger.Errorf("decode response for non-200 HTTP status: %s", err)
 			return nil, ErrInternal
 		}
 
@@ -221,6 +235,7 @@ func (a *API) Retry(ctx context.Context, req RetryRequest) (*RetryResponse, erro
 
 	var resp RetrySuccessResponse
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		a.leveledLogger.Errorf("decode response for HTTP 200 status: %s", err)
 		return nil, ErrInternal
 	}
 
@@ -234,6 +249,7 @@ func (a *API) Retry(ctx context.Context, req RetryRequest) (*RetryResponse, erro
 func (a *API) post(ctx context.Context, url string, payload interface{}) (*http.Response, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
+		a.leveledLogger.Errorf("marshal request payload %v: %v", payload, err)
 		return nil, ErrInternal
 	}
 
@@ -244,6 +260,7 @@ func (a *API) post(ctx context.Context, url string, payload interface{}) (*http.
 		bytes.NewBuffer(body),
 	)
 	if err != nil {
+		a.leveledLogger.Errorf("create HTTP request %v", err)
 		return nil, ErrInternal
 	}
 
@@ -252,8 +269,35 @@ func (a *API) post(ctx context.Context, url string, payload interface{}) (*http.
 
 	res, err := a.hc.Do(req)
 	if err != nil {
+		a.leveledLogger.Errorf("perform HTTP request %v", err)
 		return nil, ErrInternal
 	}
 
 	return res, nil
+}
+
+// ----------------------------------------------------------------------------
+
+type loggerShim struct {
+	baseLogger logging.LeveledLogger
+}
+
+func (l loggerShim) Error(msg string, keysAndValues ...interface{}) {
+	l.baseLogger.Errorf(fmt.Sprint(msg, keysAndValues))
+}
+
+func (l loggerShim) Info(msg string, keysAndValues ...interface{}) {
+	l.baseLogger.Infof(fmt.Sprint(msg, keysAndValues))
+}
+
+func (l loggerShim) Debug(msg string, keysAndValues ...interface{}) {
+	l.baseLogger.Debugf(fmt.Sprint(msg, keysAndValues))
+}
+
+func (l loggerShim) Warn(msg string, keysAndValues ...interface{}) {
+	l.baseLogger.Warnf(fmt.Sprint(msg, keysAndValues))
+}
+
+func convertLogger(logger logging.LeveledLogger) retryablehttp.LeveledLogger {
+	return loggerShim{logger}
 }

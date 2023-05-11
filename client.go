@@ -47,7 +47,7 @@ type Config struct {
 	// warnings, and informational messages.
 	//
 	// LeveledLogger is implemented by Logger, and one can be
-	// initialized at the desired level of logging.  LeveledLogger
+	// initialized at the desired level of logging. LeveledLogger
 	// also provides out-of-the-box compatibility with a Logrus Logger, but may
 	// require a thin shim for use with other logging libraries that use less
 	// standard conventions like Zap.

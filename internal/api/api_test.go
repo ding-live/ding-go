@@ -18,14 +18,16 @@ const timeFmt = "2006-01-02T15:04:05.999999999Z"
 func TestInvalidAPIKey(t *testing.T) {
 	ts := testServer("")
 
-	a := New(Config{
+	a, err := New(Config{
 		BaseURL:          ts.URL,
 		APIKey:           testInvalidApiKey,
 		CustomHTTPClient: ts.Client(),
+		LeveledLogger:    testLogger{},
 	})
+	require.NoError(t, err)
 
-	_, err := a.Authentication(context.Background(), AuthRequest{})
-	assert.ErrorIs(t, err, ErrUnauthorized)
+	_, authErr := a.Authentication(context.Background(), AuthRequest{})
+	assert.ErrorIs(t, authErr, ErrUnauthorized)
 }
 
 func TestParseAuthSuccess(t *testing.T) {
@@ -42,11 +44,13 @@ func TestParseAuthSuccess(t *testing.T) {
 
 	ts := testServer(rawRes)
 
-	a := New(Config{
+	a, err := New(Config{
 		BaseURL:          ts.URL,
 		APIKey:           testApiKey,
 		CustomHTTPClient: ts.Client(),
+		LeveledLogger:    testLogger{},
 	})
+	require.NoError(t, err)
 
 	res, err := a.Authentication(context.Background(), AuthRequest{})
 	require.NoError(t, err)
@@ -70,11 +74,13 @@ func TestParseError(t *testing.T) {
 
 	ts := testServer(rawRes, http.StatusBadRequest)
 
-	a := New(Config{
+	a, err := New(Config{
 		BaseURL:          ts.URL,
 		APIKey:           testApiKey,
 		CustomHTTPClient: ts.Client(),
+		LeveledLogger:    testLogger{},
 	})
+	require.NoError(t, err)
 
 	res, err := a.Authentication(context.Background(), AuthRequest{})
 	require.NoError(t, err)
@@ -98,11 +104,13 @@ func TestParseCheckSuccess(t *testing.T) {
 
 	ts := testServer(rawRes)
 
-	a := New(Config{
+	a, err := New(Config{
 		BaseURL:          ts.URL,
 		APIKey:           testApiKey,
 		CustomHTTPClient: ts.Client(),
+		LeveledLogger:    testLogger{},
 	})
+	require.NoError(t, err)
 
 	res, err := a.Check(context.Background(), CheckRequest{})
 	require.NoError(t, err)
@@ -130,11 +138,13 @@ func TestParseRetrySuccess(t *testing.T) {
 
 	ts := testServer(rawRes)
 
-	a := New(Config{
+	a, err := New(Config{
 		BaseURL:          ts.URL,
 		APIKey:           testApiKey,
 		CustomHTTPClient: ts.Client(),
+		LeveledLogger:    testLogger{},
 	})
+	require.NoError(t, err)
 
 	res, err := a.Retry(context.Background(), RetryRequest{})
 	require.NoError(t, err)
@@ -155,14 +165,16 @@ func TestParseInvalidResponse(t *testing.T) {
 
 	ts := testServer(rawRes)
 
-	a := New(Config{
+	a, err := New(Config{
 		BaseURL:          ts.URL,
 		APIKey:           testApiKey,
 		CustomHTTPClient: ts.Client(),
+		LeveledLogger:    testLogger{},
 	})
+	require.NoError(t, err)
 
-	_, err := a.Authentication(context.Background(), AuthRequest{})
-	require.ErrorIs(t, err, ErrInternal)
+	_, authErr := a.Authentication(context.Background(), AuthRequest{})
+	require.ErrorIs(t, authErr, ErrInternal)
 }
 
 func TestUnknownAuthStatus(t *testing.T) {
@@ -179,11 +191,13 @@ func TestUnknownAuthStatus(t *testing.T) {
 
 	ts := testServer(rawRes)
 
-	a := New(Config{
+	a, err := New(Config{
 		BaseURL:          ts.URL,
 		APIKey:           testApiKey,
 		CustomHTTPClient: ts.Client(),
+		LeveledLogger:    testLogger{},
 	})
+	require.NoError(t, err)
 
 	res, err := a.Authentication(context.Background(), AuthRequest{})
 	require.NoError(t, err)
@@ -197,3 +211,12 @@ func TestUnknownAuthStatus(t *testing.T) {
 		},
 	}, res)
 }
+
+// ----------------------------------------------------------------------------
+
+type testLogger struct{}
+
+func (testLogger) Debugf(string, ...interface{}) {}
+func (testLogger) Infof(string, ...interface{})  {}
+func (testLogger) Warnf(string, ...interface{})  {}
+func (testLogger) Errorf(string, ...interface{}) {}

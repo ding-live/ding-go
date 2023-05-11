@@ -12,6 +12,10 @@ func main() {
 		CustomerUUID:      os.Getenv("DING_CUSTOMER_UUID"),
 		APIKey:            os.Getenv("DING_API_KEY"),
 		MaxNetworkRetries: ding.Int(4),
+		LeveledLogger: &ding.Logger{
+			// Disable default logging
+			Level: ding.LevelNull,
+		},
 	})
 	if err != nil {
 		panic(err)

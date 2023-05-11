@@ -13,34 +13,47 @@ import (
 )
 
 type API struct {
-	baseURL string
-	apiKey  string
-	hc      *http.Client
+	baseURL       string
+	apiKey        string
+	hc            *http.Client
+	leveledLogger LeveledLogger
 }
 
 type Config struct {
-	BaseURL          string
-	APIKey           string
-	MaxNetworkRetry  *int
-	CustomHTTPClient *http.Client
+	BaseURL           string
+	APIKey            string
+	MaxNetworkRetries *int
+	CustomHTTPClient  *http.Client
+	LeveledLogger     LeveledLogger
 }
 
-func New(cfg Config) *API {
+func New(cfg Config) (*API, error) {
 	client := retryablehttp.NewClient()
 
-	if cfg.MaxNetworkRetry != nil {
-		client.RetryMax = *cfg.MaxNetworkRetry
+	if cfg.MaxNetworkRetries != nil {
+		client.RetryMax = *cfg.MaxNetworkRetries
 	}
 
 	if cfg.CustomHTTPClient != nil {
 		client.HTTPClient = cfg.CustomHTTPClient
 	}
 
-	return &API{
-		baseURL: cfg.BaseURL,
-		apiKey:  cfg.APIKey,
-		hc:      client.StandardClient(),
+	if cfg.LeveledLogger != nil {
+		client.Logger = convertLogger(cfg.LeveledLogger)
 	}
+
+	a := &API{
+		baseURL:       cfg.BaseURL,
+		apiKey:        cfg.APIKey,
+		hc:            client.StandardClient(),
+		leveledLogger: cfg.LeveledLogger,
+	}
+
+	if a.leveledLogger == nil {
+		return nil, fmt.Errorf("missing logger")
+	}
+
+	return a, nil
 }
 
 const APIKeyHeader = "x-api-key"
@@ -130,12 +143,15 @@ func (a *API) Authentication(ctx context.Context, req AuthRequest) (*Authenticat
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
+		a.leveledLogger.Errorf("received a non-200 HTTP status %d", res.StatusCode)
+
 		if res.StatusCode == http.StatusForbidden {
 			return nil, ErrUnauthorized
 		}
 
 		var resp ErrorResponse
 		if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+			a.leveledLogger.Errorf("unable to decode response: %s", err)
 			return nil, ErrInternal
 		}
 
@@ -146,6 +162,7 @@ func (a *API) Authentication(ctx context.Context, req AuthRequest) (*Authenticat
 
 	var resp AuthSuccessResponse
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		a.leveledLogger.Errorf("unable to decode response of HTTP OK status: %s", err)
 		return nil, ErrInternal
 	}
 
@@ -168,12 +185,15 @@ func (a *API) Check(ctx context.Context, req CheckRequest) (*CheckResponse, erro
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
+		a.leveledLogger.Errorf("received a non-200 HTTP status %d", res.StatusCode)
+
 		if res.StatusCode == http.StatusForbidden {
 			return nil, ErrUnauthorized
 		}
 
 		var resp ErrorResponse
 		if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+			a.leveledLogger.Errorf("unable to decode response: %s", err)
 			return nil, ErrInternal
 		}
 
@@ -184,6 +204,7 @@ func (a *API) Check(ctx context.Context, req CheckRequest) (*CheckResponse, erro
 
 	var resp CheckSuccessResponse
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		a.leveledLogger.Errorf("unable to decode response of HTTP OK status: %s", err)
 		return nil, ErrInternal
 	}
 
@@ -205,12 +226,15 @@ func (a *API) Retry(ctx context.Context, req RetryRequest) (*RetryResponse, erro
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
+		a.leveledLogger.Errorf("received a non-200 HTTP status %d", res.StatusCode)
+
 		if res.StatusCode == http.StatusForbidden {
 			return nil, ErrUnauthorized
 		}
 
 		var resp ErrorResponse
 		if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+			a.leveledLogger.Errorf("unable to decode response: %s", err)
 			return nil, ErrInternal
 		}
 
@@ -221,6 +245,7 @@ func (a *API) Retry(ctx context.Context, req RetryRequest) (*RetryResponse, erro
 
 	var resp RetrySuccessResponse
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		a.leveledLogger.Errorf("unable to decode response of HTTP OK status: %s", err)
 		return nil, ErrInternal
 	}
 
@@ -234,6 +259,7 @@ func (a *API) Retry(ctx context.Context, req RetryRequest) (*RetryResponse, erro
 func (a *API) post(ctx context.Context, url string, payload interface{}) (*http.Response, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
+		a.leveledLogger.Errorf("marshal request payload %v: %v", payload, err)
 		return nil, ErrInternal
 	}
 
@@ -244,6 +270,7 @@ func (a *API) post(ctx context.Context, url string, payload interface{}) (*http.
 		bytes.NewBuffer(body),
 	)
 	if err != nil {
+		a.leveledLogger.Errorf("create HTTP request %v", err)
 		return nil, ErrInternal
 	}
 
@@ -252,8 +279,45 @@ func (a *API) post(ctx context.Context, url string, payload interface{}) (*http.
 
 	res, err := a.hc.Do(req)
 	if err != nil {
+		a.leveledLogger.Errorf("perform HTTP request %v", err)
 		return nil, ErrInternal
 	}
 
 	return res, nil
+}
+
+// ----------------------------------------------------------------------------
+
+// LeveledLogger is an interface that can be implemented by any logger or a
+// logger wrapper to provide leveled logging. The methods accept a message
+// string and a variadic number of key-value pairs.
+type LeveledLogger interface {
+	Debugf(format string, v ...interface{})
+	Errorf(format string, v ...interface{})
+	Infof(format string, v ...interface{})
+	Warnf(format string, v ...interface{})
+}
+
+type loggerShim struct {
+	baseLogger LeveledLogger
+}
+
+func (l loggerShim) Error(msg string, keysAndValues ...interface{}) {
+	l.baseLogger.Errorf(fmt.Sprint(msg, keysAndValues))
+}
+
+func (l loggerShim) Info(msg string, keysAndValues ...interface{}) {
+	l.baseLogger.Infof(fmt.Sprint(msg, keysAndValues))
+}
+
+func (l loggerShim) Debug(msg string, keysAndValues ...interface{}) {
+	l.baseLogger.Debugf(fmt.Sprint(msg, keysAndValues))
+}
+
+func (l loggerShim) Warn(msg string, keysAndValues ...interface{}) {
+	l.baseLogger.Warnf(fmt.Sprint(msg, keysAndValues))
+}
+
+func convertLogger(logger LeveledLogger) retryablehttp.LeveledLogger {
+	return loggerShim{logger}
 }

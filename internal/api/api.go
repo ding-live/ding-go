@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ding-live/ding-go/pkg/logging"
 	"github.com/ding-live/ding-go/pkg/status"
 	"github.com/hashicorp/go-retryablehttp"
 )
@@ -17,7 +16,7 @@ type API struct {
 	baseURL       string
 	apiKey        string
 	hc            *http.Client
-	leveledLogger logging.LeveledLogger
+	leveledLogger LeveledLogger
 }
 
 type Config struct {
@@ -25,7 +24,7 @@ type Config struct {
 	APIKey            string
 	MaxNetworkRetries *int
 	CustomHTTPClient  *http.Client
-	LeveledLogger     logging.LeveledLogger
+	LeveledLogger     LeveledLogger
 }
 
 func New(cfg Config) *API {
@@ -278,8 +277,18 @@ func (a *API) post(ctx context.Context, url string, payload interface{}) (*http.
 
 // ----------------------------------------------------------------------------
 
+// LeveledLogger is an interface that can be implemented by any logger or a
+// logger wrapper to provide leveled logging. The methods accept a message
+// string and a variadic number of key-value pairs.
+type LeveledLogger interface {
+	Debugf(format string, v ...interface{})
+	Errorf(format string, v ...interface{})
+	Infof(format string, v ...interface{})
+	Warnf(format string, v ...interface{})
+}
+
 type loggerShim struct {
-	baseLogger logging.LeveledLogger
+	baseLogger LeveledLogger
 }
 
 func (l loggerShim) Error(msg string, keysAndValues ...interface{}) {
@@ -298,6 +307,6 @@ func (l loggerShim) Warn(msg string, keysAndValues ...interface{}) {
 	l.baseLogger.Warnf(fmt.Sprint(msg, keysAndValues))
 }
 
-func convertLogger(logger logging.LeveledLogger) retryablehttp.LeveledLogger {
+func convertLogger(logger LeveledLogger) retryablehttp.LeveledLogger {
 	return loggerShim{logger}
 }

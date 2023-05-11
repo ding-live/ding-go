@@ -1,4 +1,4 @@
-package logging
+package ding
 
 import (
 	"fmt"

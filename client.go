@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/ding-live/ding-go/internal/api"
-	"github.com/ding-live/ding-go/pkg/logging"
 	"github.com/ding-live/ding-go/pkg/status"
 	"github.com/google/uuid"
 	"github.com/nyaruka/phonenumbers"
@@ -44,21 +43,21 @@ type Config struct {
 	// If left unset, it'll be set to a default HTTP client for the package.
 	CustomHTTPClient *http.Client
 
-	// LeveledLogger is the logger that the backend will use to log errors,
+	// LeveledLogger is the logger that the will be used to log errors,
 	// warnings, and informational messages.
 	//
-	// LeveledLoggerInterface is implemented by LeveledLogger, and one can be
-	// initialized at the desired level of logging.  LeveledLoggerInterface
+	// LeveledLogger is implemented by Logger, and one can be
+	// initialized at the desired level of logging.  LeveledLogger
 	// also provides out-of-the-box compatibility with a Logrus Logger, but may
 	// require a thin shim for use with other logging libraries that use less
 	// standard conventions like Zap.
 	//
-	// Defaults to DefaultLeveledLogger.
+	// Defaults to ding.Logger.
 	//
-	// To set a logger that logs nothing, set this to a ding.LeveledLogger
-	// with a Level of LevelNull (simply setting this field to nil will not
+	// To set a logger that logs nothing, set this to a ding.Logger
+	// with a Level of ding.LevelNull (simply setting this field to nil will not
 	// work).
-	LeveledLogger logging.LeveledLogger
+	LeveledLogger LeveledLogger
 }
 
 var (
@@ -74,7 +73,7 @@ var (
 
 const apiBaseURL = "https://api.ding.live/v1"
 
-// NewClient returns a new Ding client
+// NewClient returns a new Ding client with a `Config` object.
 func NewClient(cfg Config) (*Client, error) {
 	if !isValidUUID(cfg.CustomerUUID) {
 		return nil, ErrInvalidCustomerUUID
@@ -83,7 +82,7 @@ func NewClient(cfg Config) (*Client, error) {
 	logger := cfg.LeveledLogger
 
 	if logger == nil {
-		logger = &logging.DefaultLeveledLogger
+		logger = &DefaultLeveledLogger
 	}
 
 	return &Client{

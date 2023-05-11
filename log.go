@@ -33,10 +33,6 @@ const (
 // provides out-of-the-box compatibility with a Logrus Logger, but may require
 // a thin shim for use with other logging libraries that use less standard
 // conventions like Zap.
-//
-// This Logger will be inherited by any backends created by default, but will
-// be overridden if a backend is created with GetBackendWithConfig with a
-// custom LeveledLogger set.
 var DefaultLeveledLogger Logger = Logger{
 	Level: LevelError,
 }

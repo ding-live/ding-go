@@ -18,11 +18,11 @@ type LeveledLogger interface {
 type Level int
 
 const (
-	LevelDebug Level = iota
+	LevelNull Level = iota
+	LevelDebug
 	LevelInfo
 	LevelWarn
 	LevelError
-	LevelNull
 )
 
 // DefaultLeveledLogger is the default logger that the library will use to log

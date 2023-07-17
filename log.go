@@ -34,7 +34,7 @@ const (
 // a thin shim for use with other logging libraries that use less standard
 // conventions like Zap.
 var DefaultLeveledLogger Logger = Logger{
-	Level: LevelError,
+	Level: LevelNull,
 }
 
 // Logger is a leveled logger implementation.

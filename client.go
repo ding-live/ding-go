@@ -54,10 +54,6 @@ type Config struct {
 	// standard conventions like Zap.
 	//
 	// Defaults to ding.Logger.
-	//
-	// To set a logger that logs nothing, set this to a ding.Logger
-	// with a Level of ding.LevelNull (simply setting this field to nil will not
-	// work).
 	LeveledLogger LeveledLogger
 }
 

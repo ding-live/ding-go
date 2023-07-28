@@ -85,13 +85,14 @@ const (
 )
 
 type AuthRequest struct {
-	PhoneNumber  string  `json:"phone_number,omitempty"`
-	CustomerUUID string  `json:"customer_uuid,omitempty"`
-	IP           *string `json:"ip,omitempty"`
-	DeviceID     *string `json:"device_id,omitempty"`
-	DeviceType   *string `json:"device_type,omitempty"`
-	AppVersion   *string `json:"app_version,omitempty"`
-	CallbackURL  *string `json:"callback_url,omitempty"`
+	PhoneNumber     string  `json:"phone_number,omitempty"`
+	CustomerUUID    string  `json:"customer_uuid,omitempty"`
+	IP              *string `json:"ip,omitempty"`
+	DeviceID        *string `json:"device_id,omitempty"`
+	DeviceType      *string `json:"device_type,omitempty"`
+	AppVersion      *string `json:"app_version,omitempty"`
+	CallbackURL     *string `json:"callback_url,omitempty"`
+	IsReturningUser *bool   `json:"is_returning_user,omitempty"`
 }
 
 type CheckRequest struct {

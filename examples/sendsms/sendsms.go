@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	ding "github.com/ding-live/ding-go"
+	"github.com/ding-live/ding-go"
 )
 
 func main() {
@@ -18,11 +18,12 @@ func main() {
 	}
 
 	auth, err := client.Authenticate(ding.AuthenticateOptions{
-		PhoneNumber: "+xxxxxxxxxxx",
-		IP:          ding.String("192.168.0.1"),
-		DeviceType:  &ding.DeviceTypeIOS,
-		AppVersion:  ding.String("1.2.0"),
-		CallbackURL: ding.String("https://example.com/callback"),
+		PhoneNumber:     "+xxxxxxxxxxx",
+		IP:              ding.String("192.168.0.1"),
+		DeviceType:      &ding.DeviceTypeIOS,
+		AppVersion:      ding.String("1.2.0"),
+		CallbackURL:     ding.String("https://example.com/callback"),
+		IsReturningUser: true,
 	})
 	if err != nil {
 		panic(err)

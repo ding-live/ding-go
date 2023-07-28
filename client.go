@@ -116,12 +116,13 @@ func (d DeviceType) String() string {
 // is required. Other options are optional but recommended because they are used by
 // the Ding antispam system.
 type AuthenticateOptions struct {
-	PhoneNumber string
-	IP          *string
-	DeviceID    *string
-	DeviceType  *DeviceType
-	AppVersion  *string
-	CallbackURL *string
+	PhoneNumber     string
+	IP              *string
+	DeviceID        *string
+	DeviceType      *DeviceType
+	AppVersion      *string
+	CallbackURL     *string
+	IsReturningUser bool
 }
 
 // Authentication is the result of an authentication request.
@@ -147,12 +148,13 @@ func (c *Client) AuthenticateWithContext(ctx context.Context, opt AuthenticateOp
 	}
 
 	req := api.AuthRequest{
-		PhoneNumber:  opt.PhoneNumber,
-		CustomerUUID: c.customerUUID,
-		IP:           opt.IP,
-		DeviceID:     opt.DeviceID,
-		AppVersion:   opt.AppVersion,
-		CallbackURL:  opt.CallbackURL,
+		PhoneNumber:     opt.PhoneNumber,
+		CustomerUUID:    c.customerUUID,
+		IP:              opt.IP,
+		DeviceID:        opt.DeviceID,
+		AppVersion:      opt.AppVersion,
+		CallbackURL:     opt.CallbackURL,
+		IsReturningUser: &opt.IsReturningUser,
 	}
 
 	if opt.DeviceType != nil {

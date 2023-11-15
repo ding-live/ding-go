@@ -1,5 +1,11 @@
 # Ding Go SDK
 
+{% note %}
+
+**Note:** This SDK is deprecated in favor of the [Ding API Go SDK](https://github.com/ding-live/ding-golang).
+
+{% endnote %}
+
 The Ding Go SDK allows Go backends to access the Ding API programmatically.
 
 ## Requirements
